@@ -38,8 +38,8 @@ export async function extractStream(
         const params = new URLSearchParams({
             primaryColor: 'B20710',
             secondaryColor: '170000',
-            autoplay: 'false',
-            lang: 'it'
+            autoplay: 'true',
+            lang: 'en'
         });
 
         const finalUrl = `${embedUrl}?${params.toString()}`;
