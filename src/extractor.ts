@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { convertImdbToTmdb } from './utils';
 import { StreamResponse, StreamExtra } from './types';
 
-const VIXSRC_BASE_URL = 'https://vixsrc.to';
+const VIXSRC_BASE_URL = 'https://vidlink.pro';
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 export async function extractStream(
