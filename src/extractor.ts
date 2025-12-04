@@ -1,20 +1,17 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
 import { convertImdbToTmdb } from './utils';
 import { StreamResponse, StreamExtra } from './types';
 
 const VIXSRC_BASE_URL = 'https://vidlink.pro';
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 export async function extractStream(
-    type: string, 
-    id: string, 
+    type: string,
+    id: string,
     extra?: StreamExtra
 ): Promise<StreamResponse[]> {
     try {
         let tmdbId = id;
-        
-        // Converti IMDB ID a TMDB ID se necessario
+
+        // Convert IMDB ID to TMDB ID if needed
         if (id.startsWith('tt')) {
             tmdbId = await convertImdbToTmdb(id, type);
             if (!tmdbId) {
@@ -23,7 +20,7 @@ export async function extractStream(
         }
 
         let embedUrl: string;
-        
+
         if (type === 'movie') {
             embedUrl = `${VIXSRC_BASE_URL}/movie/${tmdbId}`;
         } else if (type === 'series') {
@@ -34,12 +31,17 @@ export async function extractStream(
             throw new Error('Unsupported content type');
         }
 
-        // Aggiungi parametri personalizzati VixSRC
+        // Full set of custom parameters
         const params = new URLSearchParams({
-            primaryColor: 'B20710',
-            secondaryColor: '170000',
-            autoplay: 'true',
-            lang: 'en'
+            primaryColor: '63b8bc',
+            secondaryColor: 'a2a2a2',
+            iconColor: 'eefdec',
+            icons: 'vid',
+            player: 'jw',
+            title: 'false',
+            poster: 'false',
+            autoplay: 'false',
+            nextbutton: 'false'
         });
 
         const finalUrl = `${embedUrl}?${params.toString()}`;
@@ -53,7 +55,6 @@ export async function extractStream(
                 bingeGroup: 'vixsrc-group'
             }
         }];
-
     } catch (error) {
         console.error('Extraction error:', error);
         return [];
