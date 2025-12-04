@@ -1,3 +1,5 @@
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { convertImdbToTmdb } from './utils';
 import { StreamResponse, StreamExtra } from './types';
 
@@ -31,7 +33,7 @@ export async function extractStream(
             throw new Error('Unsupported content type');
         }
 
-        // Full set of custom parameters
+        // Add custom params
         const params = new URLSearchParams({
             primaryColor: '63b8bc',
             secondaryColor: 'a2a2a2',
@@ -46,12 +48,45 @@ export async function extractStream(
 
         const finalUrl = `${embedUrl}?${params.toString()}`;
 
+        // 🔍 Fetch the embed page
+        const { data } = await axios.get(finalUrl);
+        const $ = cheerio.load(data);
+
+        // Try to extract a direct video source
+        let videoSrc: string | undefined;
+
+        // Case 1: <video><source src="..."></video>
+        videoSrc = $('video source').attr('src');
+
+        // Case 2: iframe player
+        if (!videoSrc) {
+            videoSrc = $('iframe').attr('src');
+        }
+
+        // Case 3: JWPlayer config (common on vidlink)
+        if (!videoSrc) {
+            const scriptTag = $('script').filter((i, el) =>
+                $(el).html()?.includes('jwplayer')
+            ).html();
+
+            if (scriptTag) {
+                const match = scriptTag.match(/file:\s*"(.*?)"/);
+                if (match) {
+                    videoSrc = match[1];
+                }
+            }
+        }
+
+        if (!videoSrc) {
+            throw new Error('No playable stream found');
+        }
+
         return [{
             name: 'VixSRC',
             title: 'VixSRC Stream',
-            url: finalUrl,
+            url: videoSrc, // ✅ direct stream link
             behaviorHints: {
-                notWebReady: true,
+                notWebReady: false, // now it’s playable
                 bingeGroup: 'vixsrc-group'
             }
         }];
